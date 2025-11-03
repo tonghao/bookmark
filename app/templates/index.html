@@ -3,10 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
     <title>{{ title }}</title>
 </head>
 <body>
     <h1>{{ title }}</h1>
-    <p>书签列表</p>
+    <ul>
+        {% for bm in bookmarks%}
+        <li>
+            <a href="{{ bm.url }}"" target="_blank">{{ bm.name }}</a>
+        </li>
+        {% else %}
+        <li>还没有任何标签</li>
+        {% endfor %}
+    </ul>
 </body>
 </html>

@@ -1,0 +1,18 @@
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f4f4f4;
+  color: #333;
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 0 2rem;
+}
+h1 { color: #0056b3; }
+li {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  padding: 1rem;
+  margin-bottom: .5rem;
+  border-radius: 5px;
+}
+a { color: #007bff; text-decoration: none; }
+a:hover { text-decoration: underline; }
