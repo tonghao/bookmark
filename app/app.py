@@ -1,8 +1,9 @@
 from flask import Flask,render_template,flash
-from flask import redirect,url_for,request
+from flask import redirect,url_for,request, session
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
+from functools import wraps
 
 app = Flask(__name__)
 
@@ -49,24 +50,38 @@ def init_db():
             db.session.commit()
             print('创建用户zhangsan,密码（123456）')
         if not User.query.filter_by(username='lisi').first():
-            user1 = User(username='lisi')
-            user1.set_password('123456')
-            db.session.add(user1)
+            user2 = User(username='lisi')
+            user2.set_password('123456')
+            db.session.add(user2)
             db.session.commit()
             print('创建用户lisi,密码（123456）')
 
 # ======================路由==========================
+
+def login_required(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        user_id = session.get('user_id')
+        if not user_id:
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return wrapper
+
+
   
 @app.route('/')
 def index():
     return redirect(url_for('bookmarks'))
 
 @app.route("/bookmarks")
+@login_required
 def bookmarks():
-    bookmarks_data = Bookmark.query.all()    
+    user_id = session.get('user_id')
+    bookmarks_data = Bookmark.query.filter_by(user_id=user_id).all()
     return render_template('bookmarks.html', bookmarks=bookmarks_data)
 
 @app.route("/bookmarks/add", methods=['GET', 'POST'])
+@login_required
 def add_bookmark():
     if request.method == 'POST':
         title = request.form.get("title")
@@ -75,7 +90,8 @@ def add_bookmark():
         if not title or not url:
             flash('标题和URL都不能为空')
             return render_template('add_bookmark.html')
-        bookmark = Bookmark(title = title, url=url)
+        user_id = session.get('user_id')
+        bookmark = Bookmark(title=title, url=url, user_id=user_id)
         db.session.add(bookmark)
         db.session.commit()
 
@@ -84,6 +100,7 @@ def add_bookmark():
     return render_template('add_bookmark.html')
 
 @app.route('/bookmarks/delete/<int:bookmark_id>')
+@login_required
 def delete_bookmark(bookmark_id):
     """删除书签"""
     bm = Bookmark.query.get(bookmark_id)
@@ -95,6 +112,25 @@ def delete_bookmark(bookmark_id):
         flash("书签不存在！")
     return redirect(url_for("bookmarks"))
 
+@app.route('/login',methods=['GET','POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form.get('username','')
+        password = request.form.get('password','')
+        user = User.query.filter_by(username=username).first()
+        if user and user.check_password(password):
+            session['user_id'] = user.id
+            session['username'] = user.username
+            return redirect(url_for('bookmarks'))
+        
+        flash('用户名或密码不正确')
+    return render_template('login.html')
+
+@app.route('/logout')
+def logout():
+    session.pop('user_id', None)
+    session.pop('username', None)
+    return redirect(url_for('login'))
 
 if __name__ == '__main__':
     init_db()

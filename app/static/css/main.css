@@ -16,3 +16,8 @@ li {
 }
 a { color: #007bff; text-decoration: none; }
 a:hover { text-decoration: underline; }
+
+/* Ensure navbar links remain readable against the dark background */
+.navbar a, .navbar .navbar-text {
+  color: rgba(255,255,255,0.9);
+}
