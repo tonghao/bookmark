@@ -115,7 +115,7 @@ def delete_bookmark(bookmark_id):
 @app.route('/login',methods=['GET','POST'])
 def login():
     if request.method == 'POST':
-        username = request.form.get('username','')
+        username = request.form.get('username','').strip()
         password = request.form.get('password','')
         user = User.query.filter_by(username=username).first()
         if user and user.check_password(password):
@@ -125,6 +125,31 @@ def login():
         
         flash('用户名或密码不正确')
     return render_template('login.html')
+
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '')
+
+        if not username or not password:
+            flash('用户名和密码不能为空')
+            return render_template('register.html')
+
+        if User.query.filter_by(username=username).first():
+            flash('用户名已存在')
+            return render_template('register.html')
+
+        user = User(username=username)
+        user.set_password(password)
+        db.session.add(user)
+        db.session.commit()
+
+        flash('注册成功，请登录')
+        return redirect(url_for('login'))
+
+    return render_template('register.html')
 
 @app.route('/logout')
 def logout():
